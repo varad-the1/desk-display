@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Desk Remote</title>
+<style>
+:root{--bg:#000;--fg:#fff;--mut:#8c8c8c;--line:#3d3d3d;--card:#0b0b0b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:rgba(0,0,0,0);outline:0}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:"Roboto Mono","Droid Sans Mono",Menlo,Consolas,monospace;font-size:16px}
+body{padding-bottom:5.2rem}
+button,input,select{font:inherit;color:inherit}
+button{border:1px solid var(--line);background:#101010;border-radius:.7rem;padding:.8rem 1rem;color:var(--fg)}
+button:active{background:#222}
+button.pri{background:#fff;color:#000;border-color:#fff;font-weight:700}
+button.bad{color:#fff;border-color:#5a5a5a;background:transparent}
+input,select{width:100%;background:#050505;border:1px solid var(--line);border-radius:.6rem;padding:.7rem .8rem;color:var(--fg)}
+header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1rem .6rem;border-bottom:1px solid var(--line);position:sticky;top:0;background:#000;z-index:5}
+header b{letter-spacing:.08em}header span{color:var(--mut);font-size:.8rem}
+section{display:none;padding:1rem}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:1rem;padding:1rem;margin-bottom:.9rem}
+.card h3{margin:0 0 .7rem;font-weight:400;font-size:.85rem;letter-spacing:.12em;color:var(--mut)}
+.row{display:flex;align-items:center;padding:.7rem 0;border-bottom:1px solid #1c1c1c}
+.row:last-child{border-bottom:0}.row .m{flex:1;min-width:0}.row .m b{display:block;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .m span{color:var(--mut);font-size:.8rem}.row .t{font-size:1.7rem;margin-right:.9rem}
+.sw{width:3.2rem;height:1.8rem;border-radius:.9rem;background:#3a3a3a;position:relative;flex:none;margin-left:.6rem}
+.sw::after{content:"";position:absolute;top:.2rem;left:.2rem;width:1.4rem;height:1.4rem;border-radius:50%;background:#fff;transition:left .15s}
+.sw.on{background:#fff}.sw.on::after{left:1.6rem;background:#000}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);grid-gap:.6rem}
+.ctl{display:flex;justify-content:space-between;margin:.8rem 0}.ctl button{flex:1;margin-right:.5rem;font-size:1.2rem}.ctl button:last-child{margin-right:0}
+.big{font-size:1.35rem}.mut{color:var(--mut)}
+nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:#000;border-top:1px solid var(--line)}
+nav button{flex:1;border:0;border-radius:0;background:none;padding:1rem .2rem;color:var(--mut);font-size:.85rem;letter-spacing:.06em}
+nav button.on{color:#fff;border-top:2px solid #fff}
+.days{display:flex}.days span{flex:1;text-align:center;padding:.7rem 0;border:1px solid var(--line);margin-right:.3rem;border-radius:.5rem;font-size:.85rem}
+.days span:last-child{margin-right:0}.days span.on{background:#fff;color:#000;font-weight:700}
+.sheet{position:fixed;left:0;right:0;top:0;bottom:0;background:rgba(0,0,0,.96);z-index:20;display:none;overflow-y:auto;padding:1rem}
+.sheet.on{display:block}.sheet .box{max-width:30rem;margin:0 auto}
+.f{margin-bottom:.9rem}.f label{display:block;color:var(--mut);font-size:.8rem;margin-bottom:.3rem}
+.inl{display:flex}.inl>*{margin-right:.5rem}.inl>*:last-child{margin-right:0}
+#toast{position:fixed;left:50%;bottom:5.6rem;transform:translateX(-50%);background:#111;border:1px solid #fff;padding:.6rem 1rem;border-radius:.6rem;display:none;z-index:30;max-width:90%}
+input[type=range]{padding:0;height:2rem}
+.err{padding:2rem 1rem;text-align:center}
+/* motion: transform + opacity only */
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes slideup{from{opacity:0;transform:translateY(36px)}}
+section.on .card{animation:rise .35s cubic-bezier(.2,.8,.2,1) both}
+section.on .card:nth-child(2){animation-delay:.05s}section.on .card:nth-child(3){animation-delay:.1s}section.on .card:nth-child(4){animation-delay:.15s}
+button,.row,.sw,.days span,nav button{transition:transform .1s ease,background-color .16s ease,color .16s ease,opacity .16s ease}
+button:active,.row:active,.days span:active{transform:scale(.96)}
+.sheet.on .box{animation:slideup .28s cubic-bezier(.2,.8,.2,1) both}
+#toast{display:block;opacity:0;transform:translate(-50%,12px);transition:opacity .2s ease,transform .2s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+html,body{overscroll-behavior:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+#sp-res img,.spitem img{width:2.8rem;height:2.8rem;border-radius:.3rem;margin-right:.7rem;object-fit:cover;flex:none}
+.spitem{display:flex;align-items:center}
+#sp-res .row{cursor:pointer}
+</style>
+</head>
+<body>
+<header><b>DESK REMOTE</b><span id="conn">connecting...</span></header>
+
+<section id="s-home" class="on">
+  <div class="card" id="ringcard" style="display:none;border-color:#fff"><h3>ALARM RINGING</h3>
+    <div class="inl"><button class="pri" id="b-stop" style="flex:1">Stop</button><button id="b-snz" style="flex:1">Snooze</button></div></div>
+  <div class="card"><h3>NEXT ALARM</h3><div id="next" class="big">--</div><div id="next2" class="mut"></div></div>
+  <div class="card"><h3>NOW PLAYING</h3><div id="np" class="big">Nothing playing</div><div id="np2" class="mut"></div>
+    <div class="ctl"><button data-c="prev">&#9198;</button><button data-c="play" id="bplay">&#9654;</button><button data-c="next">&#9197;</button></div>
+    <div class="f" style="margin:0"><label id="vlabel">Volume</label><input type="range" id="vol" min="0" max="100"></div></div>
+  <div class="card"><h3>TIMERS</h3><div id="timers" class="mut">None running</div>
+    <div class="grid" style="margin-top:.7rem"><button data-t="5">5 min</button><button data-t="10">10 min</button><button data-t="25">25 min</button></div></div>
+</section>
+
+<section id="s-alarms"><div class="card"><h3>ALARMS</h3><div id="alarms"></div></div><button class="pri" id="add-alarm" style="width:100%">+ New alarm</button></section>
+
+<section id="s-routine"><div class="card"><h3>DAILY ROUTINE</h3><div id="tasks"></div></div>
+  <div class="card"><h3>ADD TASK</h3><div class="inl f"><input id="tk-text" placeholder="e.g. Workout" maxlength="40"><input id="tk-time" placeholder="18:30" maxlength="13" style="max-width:7.5rem"></div><button class="pri" id="tk-add" style="width:100%">Add task</button></div></section>
+
+<section id="s-events"><div class="card"><h3>EVENTS</h3><div id="events"></div></div>
+  <div class="card"><h3>ADD EVENT</h3><div class="f"><input id="ev-title" placeholder="e.g. Team meeting" maxlength="40"></div><div class="inl f"><input type="date" id="ev-date"><input type="time" id="ev-time" style="max-width:8rem"></div><button class="pri" id="ev-add" style="width:100%">Add event</button></div>
+  <div class="card"><h3>COUNTDOWNS</h3><div id="cds"></div></div>
+  <div class="card"><h3>ADD COUNTDOWN</h3><div class="f"><input id="cd-title" placeholder="e.g. Exam day" maxlength="40"></div><div class="f"><input type="date" id="cd-date"></div><button class="pri" id="cd-add" style="width:100%">Add countdown</button></div></section>
+
+<nav><button data-s="home" class="on">HOME</button><button data-s="alarms">ALARMS</button><button data-s="routine">ROUTINE</button><button data-s="events">EVENTS</button></nav>
+
+<div class="sheet" id="sheet"><div class="box"><h3 id="sh-title" style="letter-spacing:.1em">ALARM</h3>
+  <div class="f"><label>Time</label><input type="time" id="a-time"></div>
+  <div class="f"><label>Label</label><input id="a-label" maxlength="40" placeholder="Wake up"></div>
+  <div class="f"><label>Repeat (none = once)</label><div class="days" id="a-days"></div></div>
+  <div class="f"><label>Sound</label><select id="a-sound"></select></div>
+  <div id="a-sp" style="display:none">
+    <div class="f"><label>Plays on Spotify at alarm time (the chime plays as backup)</label><div id="sp-sel" class="mut">Nothing chosen yet</div></div>
+    <div class="inl f"><input id="sp-q" placeholder="Search a song, artist, album or playlist" maxlength="60"><button id="sp-go" style="flex:none;width:auto">Search</button></div>
+    <div class="inl f"><button id="sp-mine" style="flex:1">My playlists</button><button id="sp-try" style="flex:1">Play on display</button></div>
+    <div id="sp-res" class="card" style="max-height:19rem;overflow-y:auto;padding:.3rem .8rem"></div>
+  </div>
+  <div class="inl"><button class="bad" id="a-del">Delete</button><button id="a-cancel" style="flex:1">Cancel</button><button class="pri" id="a-save" style="flex:1">Save</button></div></div></div>
+<div style="text-align:center;padding:0 1rem 1rem"><button class="bad" id="unpair" style="display:none">Unpair this phone</button></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+var DAYS=["S","M","T","W","T","F","S"],DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var q=new URLSearchParams(location.search),pin=q.get("pin")||sessionStorage.getItem("pin")||"";
+if(q.get("pin"))sessionStorage.setItem("pin",pin);
+var S=null,editing=null,busy=false,volDrag=false;
+function $(i){return document.getElementById(i)}
+function pad(n){return (n<10?"0":"")+n}
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function toast(m){var t=$("toast");t.textContent=m;t.className="show";clearTimeout(toast.h);toast.h=setTimeout(function(){t.className=""},2000)}
+function api(method,path,body){
+  return fetch(path,{method:method,headers:{"X-Pin":pin,"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined}).then(function(r){
+    if(r.status===401){document.body.innerHTML='<div class="err"><h2>Wrong PIN</h2><p class="mut">Open Desk Remote and pair again.</p></div>';throw new Error("pin")}
+    if(r.status===429)throw new Error("locked");
+    return r.json()});
+}
+function load(){return api("GET","/api/state").then(function(s){S=s;$("conn").textContent="connected";render()}).catch(function(e){$("conn").textContent=e.message==="pin"?"":"offline - retrying"})}
+function saveCol(col){var o={};o[col]=S[col];return api("POST","/api/state",o).then(function(){toast("Saved on the display");render()}).catch(function(){toast("Could not save")})}
+function cmd(o){return api("POST","/api/cmd",o).then(function(r){if(r.result&&r.result!=="ok")toast(r.result);setTimeout(load,600)}).catch(function(){toast("Could not reach the display")})}
+function dtxt(r){if(!r.days.length)return "Once";if(r.days.length===7)return "Every day";var s=r.days.slice().sort().join("");if(s==="12345")return "Mon - Fri";if(s==="06")return "Weekends";return r.days.slice().sort().map(function(d){return DOW[d]}).join(" ")}
+function nextOcc(r,from){var p=r.time.split(":");for(var i=0;i<8;i++){var d=new Date(from.getFullYear(),from.getMonth(),from.getDate()+i,+p[0],+p[1]);if(d<=from)continue;if(!r.days.length||r.days.indexOf(d.getDay())>-1)return d}return null}
+function soundTxt(r){return r.sound==="spotify"?"Spotify: "+(r.sp&&r.sp.name||""):r.sound.indexOf("song:")===0?"your song":r.sound.replace("tone:","")}
+function fmt(ms){ms=Math.max(0,Math.ceil(ms/1000));var h=Math.floor(ms/3600),m=Math.floor(ms/60)%60,s=ms%60;return h?h+":"+pad(m)+":"+pad(s):pad(m)+":"+pad(s)}
+
+function render(){
+  if(!S)return;
+  var now=new Date(),best=null,br=null;
+  S.routines.forEach(function(r){if(!r.on)return;var d=nextOcc(r,now);if(d&&(!best||d<best)){best=d;br=r}});
+  $("next").textContent=best?pad(best.getHours())+":"+pad(best.getMinutes())+"  "+br.label:"No alarm set";
+  $("next2").textContent=best?DOW[best.getDay()]+" "+best.getDate()+" "+MON[best.getMonth()]+" - "+soundTxt(br):"";
+  $("ringcard").style.display=S.ringing?"block":"none";
+  $("np").textContent=S.media.active&&S.media.title?S.media.title:"Nothing playing";$("np2").textContent=S.media.artist||"";
+  $("bplay").innerHTML=S.media.playing?"&#9208;":"&#9654;";
+  if(!volDrag){$("vol").value=Math.round(S.volume.cur/S.volume.max*100);$("vlabel").textContent="Volume "+Math.round(S.volume.cur/S.volume.max*100)+"%"}
+  var tb=$("timers");tb.innerHTML="";
+  if(S.timers.length)S.timers.forEach(function(t){var r=el("div","row"),m=el("div","m");m.appendChild(el("b",null,fmt(t.left)));m.appendChild(el("span",null,t.label+(t.running?"":" (paused)")));r.appendChild(m);tb.appendChild(r)});
+  else tb.appendChild(el("div","mut","None running"));
+  var ab=$("alarms");ab.innerHTML="";
+  S.routines.slice().sort(function(a,b){return a.time<b.time?-1:1}).forEach(function(r){
+    var row=el("div","row"),m=el("div","m");row.appendChild(el("div","t",r.time));m.appendChild(el("b",null,r.label));m.appendChild(el("span",null,dtxt(r)+" - "+soundTxt(r)));row.appendChild(m);
+    var sw=el("div","sw"+(r.on?" on":""));sw.onclick=function(e){e.stopPropagation();r.on=!r.on;saveCol("routines")};row.appendChild(sw);
+    row.onclick=function(){openSheet(r)};ab.appendChild(row)});
+  if(!S.routines.length)ab.appendChild(el("div","mut","No alarms yet"));
+  var tk=$("tasks");tk.innerHTML="";
+  S.tasks.forEach(function(t){var row=el("div","row"),m=el("div","m");m.appendChild(el("b",null,t.text));m.appendChild(el("span",null,t.time||"any time"));row.appendChild(m);
+    var d=el("button","bad","Delete");d.onclick=function(){S.tasks=S.tasks.filter(function(x){return x!==t});saveCol("tasks")};row.appendChild(d);tk.appendChild(row)});
+  if(!S.tasks.length)tk.appendChild(el("div","mut","No tasks"));
+  var ev=$("events");ev.innerHTML="";
+  S.events.slice().sort(function(a,b){return (a.date+(a.time||""))<(b.date+(b.time||""))?-1:1}).forEach(function(e){var row=el("div","row"),m=el("div","m");m.appendChild(el("b",null,e.title));m.appendChild(el("span",null,e.date+(e.time?" "+e.time:"")));row.appendChild(m);
+    var d=el("button","bad","Delete");d.onclick=function(){S.events=S.events.filter(function(x){return x!==e});saveCol("events")};row.appendChild(d);ev.appendChild(row)});
+  if(!S.events.length)ev.appendChild(el("div","mut","No events"));
+  var cd=$("cds");cd.innerHTML="";
+  S.countdowns.forEach(function(c){var row=el("div","row"),m=el("div","m");m.appendChild(el("b",null,c.title));m.appendChild(el("span",null,c.date));row.appendChild(m);
+    var d=el("button","bad","Delete");d.onclick=function(){S.countdowns=S.countdowns.filter(function(x){return x!==c});saveCol("countdowns")};row.appendChild(d);cd.appendChild(row)});
+  if(!S.countdowns.length)cd.appendChild(el("div","mut","No countdowns"));
+}
+
+/* alarm sheet */
+function openSheet(r){
+  editing=r||null;$("sh-title").textContent=r?"EDIT ALARM":"NEW ALARM";
+  $("a-time").value=r?r.time:"07:00";$("a-label").value=r?r.label:"";
+  var d=$("a-days");d.innerHTML="";var sel=r?r.days:[1,2,3,4,5];
+  for(var i=0;i<7;i++)(function(i){var s=el("span",sel.indexOf(i)>-1?"on":"",DAYS[i]);s.onclick=function(){s.className=s.className==="on"?"":"on"};d.appendChild(s)})(i);
+  var so=$("a-sound");so.innerHTML="";
+  [["tone:chime","Chime"],["tone:beep","Beep"],["tone:rise","Rise"],["spotify","Spotify (pick a song or playlist)"]].forEach(function(t){var o=document.createElement("option");o.value=t[0];o.textContent=t[1];so.appendChild(o)});
+  spSel=(r&&r.sp)?r.sp:null;$("sp-res").innerHTML="";$("sp-q").value="";
+  if(r&&(r.sound==="spotify"||r.sound.indexOf("song:")===0)){var k=document.createElement("option");k.value="keep";k.textContent="Keep current ("+soundTxt(r)+")";so.insertBefore(k,so.firstChild);so.value="keep"}
+  else so.value=r?r.sound:"tone:chime";
+  toggleSp();
+  $("a-del").style.display=r?"":"none";$("sheet").className="sheet on";
+}
+
+/* Spotify song picker (searches run on the display, which holds the Spotify login) */
+var spSel=null;
+function spShow(){var b=$("sp-sel");b.innerHTML="";
+  if(!spSel){b.textContent="Nothing chosen yet";return}
+  var row=el("div","spitem");if(spSel.img){var im=document.createElement("img");im.src=spSel.img;row.appendChild(im)}
+  var m=el("div","m");m.appendChild(el("b",null,spSel.name));m.appendChild(el("span",null,spSel.kind+(spSel.sub?" - "+spSel.sub:"")));row.appendChild(m);b.appendChild(row)}
+function toggleSp(){var on=$("a-sound").value==="spotify";$("a-sp").style.display=on?"block":"none";if(on)spShow()}
+$("a-sound").onchange=toggleSp;
+function spImg(imgs){return (imgs&&imgs.length)?imgs[imgs.length-1].url:""}
+function spNames(a){return (a||[]).map(function(x){return x.name}).join(", ")}
+function spRows(box,title,kind,items){
+  var any=false;
+  (items||[]).forEach(function(it){
+    if(!it)return;
+    if(!any){box.appendChild(el("div","mut",title));box.lastChild.style.cssText="margin:.6rem 0 .2rem;font-size:.75rem;letter-spacing:.1em";any=true}
+    var sub=kind==="track"||kind==="album"?spNames(it.artists):kind==="playlist"?"by "+((it.owner&&it.owner.display_name)||"Spotify"):"artist";
+    var img=spImg(kind==="track"?(it.album&&it.album.images):it.images);
+    var row=el("div","row"),m=el("div","m");
+    if(img){var im=document.createElement("img");im.src=img;row.appendChild(im)}
+    m.appendChild(el("b",null,it.name));m.appendChild(el("span",null,kind+" - "+sub));row.appendChild(m);
+    row.onclick=function(){spSel={uri:it.uri,name:it.name,sub:sub,kind:kind,img:img};spShow();toast("Selected: "+it.name)};
+    box.appendChild(row)});
+  return any;
+}
+function spMsg(t){var b=$("sp-res");b.innerHTML="";b.appendChild(el("div","mut",t))}
+function spGet(path,done){
+  spMsg("Loading...");
+  api("GET","/api/spotify?p="+encodeURIComponent(path)).then(function(r){
+    if(r.status===401||r.status===403){spMsg("Spotify isn't connected on the display. Open SYSTEM on the tablet and tap Connect Spotify.");return}
+    if(r.status!==200||!r.body){spMsg("Spotify didn't answer ("+r.status+"). Try again.");return}
+    done(r.body)}).catch(function(){spMsg("Could not reach the display.")});
+}
+$("sp-go").onclick=function(){var q=$("sp-q").value.replace(/^\s+|\s+$/g,"");if(!q){toast("Type something to search");return}
+  spGet("/v1/search?type=track,playlist,album,artist&limit=5&q="+encodeURIComponent(q),function(j){
+    var box=$("sp-res");box.innerHTML="";
+    var a=spRows(box,"SONGS","track",j.tracks&&j.tracks.items),b=spRows(box,"PLAYLISTS","playlist",j.playlists&&j.playlists.items),
+        c=spRows(box,"ALBUMS","album",j.albums&&j.albums.items),d=spRows(box,"ARTISTS","artist",j.artists&&j.artists.items);
+    if(!(a||b||c||d))box.appendChild(el("div","mut","Nothing found"))})};
+$("sp-q").onkeydown=function(e){if(e.keyCode===13)$("sp-go").onclick()};
+$("sp-mine").onclick=function(){spGet("/v1/me/playlists?limit=40",function(j){var box=$("sp-res");box.innerHTML="";if(!spRows(box,"YOUR PLAYLISTS","playlist",j.items))box.appendChild(el("div","mut","No playlists found"))})};
+$("sp-try").onclick=function(){if(!spSel){toast("Choose something first");return}cmd({cmd:"spotifyplay",sp:spSel})};
+$("add-alarm").onclick=function(){openSheet(null)};
+$("a-cancel").onclick=function(){$("sheet").className="sheet"};
+$("a-del").onclick=function(){if(!confirm("Delete this alarm?"))return;S.routines=S.routines.filter(function(x){return x!==editing});$("sheet").className="sheet";saveCol("routines")};
+$("a-save").onclick=function(){
+  var days=[],sp=$("a-days").children;for(var i=0;i<sp.length;i++)if(sp[i].className==="on")days.push(i);
+  var snd=$("a-sound").value,time=$("a-time").value||"07:00",label=$("a-label").value.replace(/^\s+|\s+$/g,"")||"Alarm";
+  if(snd==="spotify"&&!spSel){toast("Choose a song or playlist first");return}
+  if(editing){editing.time=time;editing.label=label;editing.days=days;
+    if(snd!=="keep"){editing.sound=snd;if(snd==="spotify")editing.sp=spSel;else delete editing.sp}
+    editing.on=true}
+  else{var nr={id:"r"+Date.now(),time:time,label:label,days:days,sound:snd,on:true};if(snd==="spotify")nr.sp=spSel;S.routines.push(nr)}
+  $("sheet").className="sheet";saveCol("routines");
+};
+
+/* other forms */
+$("tk-add").onclick=function(){var t=$("tk-text").value.replace(/^\s+|\s+$/g,"");if(!t){toast("Enter a task");return}S.tasks.push({id:"t"+Date.now(),text:t,time:$("tk-time").value.replace(/^\s+|\s+$/g,""),done:""});$("tk-text").value="";$("tk-time").value="";saveCol("tasks")};
+$("ev-add").onclick=function(){var t=$("ev-title").value.replace(/^\s+|\s+$/g,""),d=$("ev-date").value;if(!t||!d){toast("Enter a title and date");return}S.events.push({id:"e"+Date.now(),title:t,date:d,time:$("ev-time").value||""});$("ev-title").value="";saveCol("events")};
+$("cd-add").onclick=function(){var t=$("cd-title").value.replace(/^\s+|\s+$/g,""),d=$("cd-date").value;if(!t||!d){toast("Enter a title and date");return}S.countdowns.push({id:"c"+Date.now(),title:t,date:d});$("cd-title").value="";saveCol("countdowns")};
+
+/* controls */
+Array.prototype.forEach.call(document.querySelectorAll("[data-c]"),function(b){b.onclick=function(){var c=b.getAttribute("data-c");cmd({cmd:c==="play"&&S&&S.media.playing?"pause":c})}});
+Array.prototype.forEach.call(document.querySelectorAll("[data-t]"),function(b){b.onclick=function(){cmd({cmd:"timer",minutes:+b.getAttribute("data-t")})}});
+$("b-stop").onclick=function(){cmd({cmd:"stop"})};$("b-snz").onclick=function(){cmd({cmd:"snooze"})};
+$("vol").oninput=function(){volDrag=true;$("vlabel").textContent="Volume "+this.value+"%"};
+$("vol").onchange=function(){volDrag=false;cmd({cmd:"volume",value:+this.value})};
+Array.prototype.forEach.call(document.querySelectorAll("nav button"),function(b){b.onclick=function(){
+  Array.prototype.forEach.call(document.querySelectorAll("nav button"),function(x){x.className=x===b?"on":""});
+  Array.prototype.forEach.call(document.querySelectorAll("section"),function(s){s.className=s.id==="s-"+b.getAttribute("data-s")?"on":""})}});
+
+/* swipe left/right to change tab (not while the alarm sheet is open, or when dragging a slider) */
+(function(){
+  var sx=0,sy=0,st=0,live=false;
+  var btns=Array.prototype.slice.call(document.querySelectorAll("nav button"));
+  document.addEventListener("touchstart",function(e){var t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();
+    live=e.touches.length===1&&!(e.target.closest&&e.target.closest("input,select,.sheet.on,#sp-res"))},{passive:true});
+  document.addEventListener("touchend",function(e){
+    if(!live)return;live=false;var t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+    if(Math.abs(dx)<70||Math.abs(dy)>Math.abs(dx)*0.6||Date.now()-st>800)return;
+    var cur=0;btns.forEach(function(b,i){if(b.className==="on")cur=i});
+    var n=cur+(dx<0?1:-1);if(n>=0&&n<btns.length)btns[n].onclick();
+  },{passive:true});
+})();
+if(window.App&&App.forget){$("unpair").style.display="inline-block";$("unpair").onclick=function(){if(confirm("Forget this display on this phone?"))App.forget()}}
+load();setInterval(function(){if(!document.hidden&&$("sheet").className.indexOf("on")<0&&!volDrag)load()},5000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Desk Remote</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:rgba(0,0,0,0);outline:0}
+html,body{margin:0;background:#000;color:#fff;font-family:"Roboto Mono","Droid Sans Mono",Menlo,Consolas,monospace;font-size:16px}
+body{padding:2.2rem 1.4rem}
+h1{font-size:1.6rem;letter-spacing:.06em;margin:0 0 .3rem}.mut{color:#8c8c8c}
+button,input{font:inherit;color:#fff;width:100%}
+button{border:1px solid #3d3d3d;background:#101010;border-radius:.8rem;padding:1rem;margin-bottom:.7rem}
+button.pri{background:#fff;color:#000;border-color:#fff;font-weight:700}
+input{background:#050505;border:1px solid #3d3d3d;border-radius:.7rem;padding:.9rem;margin-bottom:.7rem;letter-spacing:.12em}
+.card{border:1px solid #3d3d3d;border-radius:1rem;padding:1rem;margin:1.2rem 0;background:#0b0b0b}
+.dev{display:flex;align-items:center;padding:.8rem;border:1px solid #3d3d3d;border-radius:.8rem;margin-bottom:.6rem}
+.dev.on{border-color:#fff}.dev b{display:block;font-weight:400}.dev span{color:#8c8c8c;font-size:.85rem}
+#msg{min-height:1.4rem;margin:.4rem 0}
+</style>
+</head>
+<body>
+<h1>DESK REMOTE</h1>
+<div class="mut">Control your Desk Display from this phone</div>
+<div class="card">
+  <div class="mut" style="margin-bottom:.6rem">1. Find the display (same Wi-Fi)</div>
+  <button class="pri" id="scan">Find my display</button>
+  <div id="found"></div>
+  <input id="ip" placeholder="or type its address, e.g. 192.168.1.50" inputmode="decimal" autocomplete="off">
+</div>
+<div class="card">
+  <div class="mut" style="margin-bottom:.6rem">2. Enter the PIN shown on the display (SYSTEM tab)</div>
+  <input id="pin" placeholder="6-digit PIN" inputmode="numeric" maxlength="6" autocomplete="off">
+  <button class="pri" id="go">Connect</button>
+  <div id="msg" class="mut"></div>
+</div>
+<script>
+(function(){
+function $(i){return document.getElementById(i)}
+var params=new URLSearchParams(location.search);
+function msg(t){$("msg").textContent=t}
+var saved="";try{saved=App.saved()}catch(e){}
+if(saved&&!params.get("forget")&&!params.get("err")){var p=saved.split("|");App.open(p[0],p[1])}
+else{
+  if(params.get("err"))msg("Could not reach the display. Is it on and on this Wi-Fi? Pair again or try again.");
+  if(saved){var q=saved.split("|");$("ip").value=q[0];$("pin").value=q[1];$("go").textContent="Retry"}
+}
+window.onScan=function(list){
+  $("scan").textContent="Find my display";$("scan").disabled=false;
+  var box=$("found");box.innerHTML="";
+  if(!list.length){msg("No display found. Check that both are on the same Wi-Fi, or type the address.");return}
+  list.forEach(function(x,i){var p=x.split("|"),d=document.createElement("div");d.className="dev"+(i===0?" on":"");d.innerHTML="<div><b></b><span></span></div>";
+    d.querySelector("b").textContent=p[1];d.querySelector("span").textContent=p[0];
+    d.onclick=function(){$("ip").value=p[0];Array.prototype.forEach.call(box.children,function(c){c.className="dev"});d.className="dev on"};box.appendChild(d)});
+  $("ip").value=list[0].split("|")[0];msg("Found "+list.length+" display"+(list.length>1?"s":"")+". Enter the PIN below.");
+};
+$("scan").onclick=function(){$("scan").textContent="Searching...";$("scan").disabled=true;msg("");$("found").innerHTML="";App.scan()};
+window.onTest=function(ok,m){
+  $("go").disabled=false;
+  if(ok){App.save($("ip").value.replace(/\s/g,""),$("pin").value);App.open($("ip").value.replace(/\s/g,""),$("pin").value)}
+  else msg(m);
+};
+$("go").onclick=function(){
+  var ip=$("ip").value.replace(/\s/g,""),pin=$("pin").value.replace(/\s/g,"");
+  if(!ip){msg("Find the display or type its address first.");return}
+  if(pin.length!==6){msg("Enter the 6-digit PIN.");return}
+  $("go").disabled=true;msg("Checking...");App.test(ip,pin);
+};
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# build output
+kiosk/out/
+phone/out/
+
+# signing keys: create your own, never commit them
+*.keystore
+*.jks
+
+# per-machine settings and backups
+.tablet.json
+backups/
+
+# editor / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
