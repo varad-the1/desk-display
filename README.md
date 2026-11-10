@@ -24,6 +24,7 @@ It runs as a kiosk app: the tablet boots straight into it. No cloud account, no 
 | **Assist** | Type commands such as "set an alarm at 6:45 pm", "pause", "next" |
 | **Idle screens** | Synced lyrics after 10 s while music plays, 16 famous paintings (with the painter and a bit of trivia) or a big clock after 2 min |
 | **Night mode** | Automatic dim, black screen with a quiet clock |
+| **Project to PC** | One tap on **Project** opens [spacedesk](https://www.spacedesk.net) and turns the tablet into a second monitor for a Windows PC |
 | **Phone remote** | Control it from a phone browser or the small Desk Remote app, protected by a PIN |
 | **Updates over Wi-Fi** | Push a new page or paintings from your PC without a cable, with automatic rollback |
 
@@ -34,7 +35,7 @@ More screenshots are in [`docs/screenshots`](docs/screenshots).
 ## What you need
 
 * An Android tablet or phone, Android 5.0 or newer, used in landscape (built and tested on a 10.1" 1920x1200 tablet).
-* Wi-Fi (weather, lyrics and the optional Spotify link need internet; the clock, alarms and timers do not).
+* Wi-Fi (weather, lyrics and the optional Spotify link need internet; the clock, alarms and timers do not). For **Project**, a Windows PC with the spacedesk driver on the same network.
 * To **install**: just the APK. To **build**: Windows with PowerShell, a JDK (8 or newer) and the Android SDK
   (`build-tools` and one `platforms/android-NN`). No Gradle.
 
@@ -88,6 +89,29 @@ Java changes (`kiosk\src`) still need a rebuilt APK.
 * Or install **Desk Remote** (`phone\`), which finds the tablet on your Wi-Fi.
 * The PIN protects every control call. Wrong guesses are rate-limited; "New PIN" in SYSTEM changes it.
 
+## Use the tablet as a second monitor (spacedesk)
+
+The **Project** button in Quick Actions opens the free [spacedesk](https://www.spacedesk.net) viewer. With one setting it connects to your
+Windows PC by itself, and Windows then sees the tablet as an extra 1920x1200 display that you can extend your desktop onto.
+Desk Display does not stream anything itself: it launches the spacedesk app (and opens its Play Store page if it is not installed).
+
+**One-time setup**
+
+1. On the PC, install the **spacedesk Windows driver** from <https://www.spacedesk.net> and make sure it is running (tray icon).
+   Allow it through Windows Firewall on your private network. The tablet and the PC must be on the same Wi-Fi or network.
+2. On the tablet, press **Project**. If spacedesk is missing it opens in the Play Store: install it ("spacedesk - USB Display for PC").
+3. In spacedesk open the side menu > **Settings > Connection > Automatic Connect to... > IP-Address** and enter the address of the PC.
+   The field wants three digits per part, so `192.168.1.50` is typed as `192168001050`. Find the address with `ipconfig` on the PC.
+   (Hostname works too, but an address is more reliable.)
+4. Press **Project** again. spacedesk starts, connects, and the second display appears on the PC. Press **Home** to go back to Desk Display.
+
+**Tips**
+
+* Give the PC a fixed address (a DHCP reservation in your router), otherwise auto-connect stops working when the address changes.
+* If you skip step 3 the viewer still lists the PC by itself and you tap it once.
+* spacedesk can also connect over USB. Desk Display does not set that up and it has not been tested here.
+* No spacedesk driver or app is bundled. spacedesk is a separate product with its own terms.
+
 ## Music, and Spotify (optional)
 
 The player reads the **Android media session**, so now playing, the queue, play/pause/next, seeking, the visualiser and synced
@@ -115,7 +139,7 @@ If an alarm song cannot start (no Premium, offline, Spotify closed), the built-i
 Everything you create (alarms, events, settings) stays on the tablet. The page contacts only:
 [Open-Meteo](https://open-meteo.com) (weather and place search), [ipwho.is](https://ipwho.is) (guess your city when you leave
 the place blank), [LRCLIB](https://lrclib.net) (synced lyrics for the song that is playing, by title and artist) and the Spotify API
-(only if you connect it). The phone remote and updates run on your own network.
+(only if you connect it). The phone remote and updates run on your own network. **Project** only launches the spacedesk app, which talks to your PC directly.
 
 ## Project layout
 
